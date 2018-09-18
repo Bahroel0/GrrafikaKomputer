@@ -3,7 +3,8 @@
  
 typedef struct { float x; float y; }Point2D_t;
 typedef struct { int x; int y; }Point2D_i;
-typedef struct { float r; float g; float b;}RGB; 
+typedef struct { float r; float g; float b;}RGB;
+typedef struct { float v[3];}Vector2D_t;
 
 int j=0;
 
@@ -208,6 +209,19 @@ void AnimasiSinus(){
 
 	animation(p,360);
 	glFlush();
+}
+
+Vector2D_t point2vector(Point2D_t point){
+	 Vector2D_t vec;
+	 vec.v[1] = point.x;
+	 vec.v[2] = point.y;
+	 vec.v[3] = 1.; 
+}
+
+Point2D_t vector2point(Vector2D_t vec){
+	Point2D_t point;
+	point.x = vec.v[1];
+	point.y	= vec.v[2];
 }
 
 
