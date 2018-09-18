@@ -7,6 +7,27 @@ typedef struct { float r; float g; float b;}RGB;
 
 int j=0;
 
+
+int index = 0;
+
+void Timer(int value) {
+	glutPostRedisplay();
+	glutTimerFunc(10, Timer, 0);
+}
+
+void animation(Point2D_t *p, int size) {
+	glColor3f(1.0, 0.0, 0.0);
+	glPointSize(10);
+	glBegin(GL_POINTS);
+		glVertex2f(p[index].x, p[index].y);
+	glEnd();
+		index++;
+		if (index > size){
+			index = 0;
+		}
+	glutTimerFunc(1, Timer, 0);
+}
+
 void Point(float x, float y, int size, RGB color){
     glColor3f(color.r, color.g, color.b);
 	glPointSize(size);
@@ -24,7 +45,7 @@ void Line(Point2D_t *point, int n, RGB color){
 	glEnd();
 }
 
-void Area(Point2D_t *object, int n, RGB color){
+void Polygon(Point2D_t *object, int n, RGB color){
     glColor3f(color.r, color.g, color.b);
     glBegin(GL_LINE_LOOP);
 	for (int i = 0; i<n; i++){
@@ -58,7 +79,7 @@ void GambarBintang(){
     Point2D_t object[10] = { { 10, 80 }, { 29, 20 }, { 87, 20 }, { 40, 0 },
 	{ 58, -40 }, { 10, -10 }, { -38, -40 }, { -16, 0 }, { -67, 20 }, { -13, 20 } };
     
-    Area(object, 10, {1.0, 0.0, 0.0});
+    Polygon(object, 10, {1.0, 0.0, 0.0});
 
     glFlush();
 }
@@ -160,21 +181,36 @@ void AnimasiLingkaran(){
 
 	Line(p, 360, {0, 0.0, 0.0});
 
-	double sudut = (float)(j / 57.3);
-	float x1 = (float)(jari*cos(sudut));
-	float y1 = (float)(jari*sin(sudut));
-
-	Point(x1, y1, 20, {1,0,0});
-
+	animation(p,360);
 	glFlush();
-
-	if(j <=360){
-		j++;
-	}else{
-		j = 0;
-	}
-
 }
+
+void AnimasiSinus(){
+	int chartesius[] = {-180,180,-180,180}, k, n;
+	float amplitudo = 180.0;
+	float x = chartesius[0];
+
+    // set warna grafik
+    RGB color = {1,0.5,0};
+    // menentukan banyaknya gelombang
+	k = 1;
+	// n merupakan total titik penentu grafik
+    n = ( abs(chartesius[0]) + abs(chartesius[1]) ) * k;
+	Point2D_t p[n];
+
+	for (int i = 0; i<n; i++){
+		double teta = (float)(i / 57.3);
+		p[i].x = x;
+		x = x + (float) 1/k;
+		p[i].y = (float)(amplitudo*sin(teta));
+	}
+	Line(p, n, color);
+
+	animation(p,360);
+	glFlush();
+}
+
+
 
 void Draw(){
 
@@ -184,16 +220,12 @@ void Draw(){
     // TvRusak();
 	// GambarBintang();
 
-    Lingkaran();
-	Sinus();
-	Daun();
-	AnimasiLingkaran();
+    // Lingkaran();
+	// Sinus();
+	// Daun();
+	// AnimasiLingkaran();
+	AnimasiSinus();
     
-}
-
-void Timer(int){
-	glutPostRedisplay();
-    glutTimerFunc(40, Timer, 1);
 }
 
 int main(int iArgc, char** cppArgv) {
@@ -204,7 +236,7 @@ int main(int iArgc, char** cppArgv) {
 	glutCreateWindow("Grafika Komputer");
 	glutIdleFunc(Draw);
 	glutDisplayFunc(Draw);
-    glutTimerFunc(3600, Timer, 1);
 	glutMainLoop();
 	return 0;
 }
+

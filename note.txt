@@ -4,3 +4,10 @@ Go to direktory :
 
 g++ main.cpp -o main -lglut -lGLU -lGL
 ./main
+
+
+
+Transformasi pada object :
+jika ada proses translasi (pergeseran) kemudian  dirotasi maka formasi perkalian dari proses yang paling belakang
+untuk mendapatkan hasil vektornya adalah Rotasi(teta).Translasi(teta).point
+
