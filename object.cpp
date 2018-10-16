@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <GL/glut.h>
 #include <cmath>
+#include <string.h>
 
 typedef struct { float x; float y; }point2D_t;
 typedef struct { float r; float g; float b;}RGB;
@@ -25,12 +26,12 @@ typedef struct {
     face_t fc[32];
 }object3D_t;
 
-typedef struct {
-    int numofVertices;
-    point3D_t pnt[100];
-    int numofFaces;
-    face_t fc[32];
-}object3D_t;
+// typedef struct {
+//     int numofVertices;
+//     point3D_t pnt[100];
+//     int numofFaces;
+//     face_t fc[32];
+// }object3D_t;
 
 typedef struct {
     int numofVertices;
@@ -58,9 +59,55 @@ void init(){
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+int char_int(char *d) { int sum = atoi(d); return(int) sum; }
+
 void Draw(){
     init();
 
+    FILE *fp;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+   fp = fopen("limas2.off", "r");
+    if (fp == NULL)
+        exit(EXIT_FAILURE);
+
+    // inisialisasi array untuk menerima nilai titik dan face
+    int row[255][255];
+    int index = 0;
+   while ((read = getline(&line, &len, fp)) != -1) {
+        char *p = strtok (line, " ");
+        int k=0;
+        while (p != NULL)
+        {
+            row[index][k] = char_int(p);
+            p = strtok (NULL, " ");
+            k++;
+        }
+        index++; // mengatur pembacaan setiap baris 
+    }
+    printf("Jumlah titik : %d\n", row[1][0]);
+    printf("Jumlah face : %d\n\n", row[1][1]);
+    // printf("kordinat titik pertama : %d, %d, %d\n", row[2][0], row[2][1], row[2][2]);
+
+    for(int l=0; l<row[1][0]; l++){
+        printf("Titik %d: %d %d %d, RGB: %d, %d, %d\n", l, row[l+2][0], row[l+2][1], row[l+2][2], row[l+2][3], row[l+2][4], row[l+2][5]);
+    }
+    
+    for(int m=0; m<row[1][1]; m++){
+        int kolomFace = row[m+2+row[1][0]][0];
+        int h=1;
+        printf("Face %d:", m);
+        for(h=1; h<=kolomFace; h++){
+            printf(" %d ", row[m+2+row[1][0]][h]);
+        }
+        printf("\n");
+    }
+
+
+    free(line);
+    exit(EXIT_SUCCESS);
     
     // object3D_t kubus = {
     //     8,
@@ -96,6 +143,8 @@ void Draw(){
     printf("\n\n");
     glFlush();
 }
+
+
 
 
 int main(int Argc, char* argv[]){
