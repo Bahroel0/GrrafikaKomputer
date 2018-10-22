@@ -36,8 +36,10 @@ typedef struct {
 
 void Polygon(point2D_t pnt[],int n, RGB color){
     glColor3f(color.r, color.g, color.b);
+
+    // glDrawArrays(GL_LINE_STRIP, 0, sizeof(pnt)/sizeof(float));
     int i;
-    glBegin(GL_LINE);
+    glBegin(GL_LINES);
         for (i=0;i<n;i++) {
             glVertex2f(pnt[i].x, pnt[i].y);
         }
@@ -48,7 +50,7 @@ void init(){
     glClearColor(1.0, 1.0, 1.0, 1.0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(-180, 180, -180, 180);
+	gluOrtho2D(-200, 200, -200, 200);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -80,7 +82,6 @@ void FromFileOFF(){
     }
     printf("Jumlah titik : %d\n", row[1][0]);
     printf("Jumlah face : %d\n\n", row[1][1]);
-    // printf("kordinat titik pertama : %d, %d, %d\n", row[2][0], row[2][1], row[2][2]);
 
     for(int l=0; l<row[1][0]; l++){
         printf("Titik %d: %d %d %d, RGB: %d, %d, %d\n", l, row[l+2][0], row[l+2][1], row[l+2][2], row[l+2][3], row[l+2][4], row[l+2][5]);
@@ -136,27 +137,30 @@ void ObjectKubus(){
     Polygon(object, 36, {1.0, 0.0, 0.0});
 }
 
-void GambarkanObject3D(int numofVertices, point3D_t *pnt,int numofFaces, face_t *face){
+void GambarkanObject3D(int numofVertices, point3D_t *pnt, int numofFaces, face_t *face){
     printf("Banyaknya Titik : %d \n", numofVertices);
     printf("Banyaknya Face  : %d \n", numofFaces);
 
-    point2D_t points[numofVertices];
     int t;
     for(t=0; t<numofVertices; t++){
         printf("Titik %d : %.0f, %.0f, %.0f \n", t, pnt[t].x, pnt[t].y, pnt[t].z);
-        points[t].x = pnt[t].x;
-        points[t].y = pnt[t].y;
     }
 
     for(int i=0; i < numofFaces; i++){
+        point2D_t points[numofVertices];
         printf("Face ke-%d, vertex : %d  ==>\n", i, face[i].numofVertices );
         for(int j=0; j < face[i].numofVertices; j++){
             int vertek = face[i].pnt[j];
             printf("   %d : %.0f, %.0f, %.0f", face[i].pnt[j], pnt[vertek].x, pnt[vertek].y, pnt[vertek].z);
+            
+            points[j].x = pnt[vertek].x;
+            points[j].y = pnt[vertek].y;
+            
             printf("\n");
         }
+        Polygon(points, numofVertices, {1.0, 0.0, 0.0});
     }
-    Polygon(points, numofVertices, {1.0, 0.0, 0.0});
+    
 }
 
 void Tabung(){
@@ -210,10 +214,11 @@ void Tabung(){
             }
             pointTop3 = pointTop3-2;
         }else if(j == (n-1)){
+            face[j].numofVertices = 3;
             face[j].pnt[0] = pointCenterTop;
             face[j].pnt[1] = pointCenterTop+1;
             face[j].pnt[2] = n-1;
-        }else if(j>(n-1) && j<(2*n-1)){
+        }else if(j>=n && j<(2*n-1)){
             face[j].numofVertices = 3;
             // inisialisasi titik pada face
             int l;
@@ -232,15 +237,15 @@ void Tabung(){
             // inisialisasi titik pada face
             face[j].pnt[0] = pointTop4;
             face[j].pnt[1] = pointBottom4;
-            face[j].pnt[2] = pointCenterTop + 1;
-            face[j].pnt[3] = pointCenterBottom + 1 + n;
+            face[j].pnt[3] = pointCenterTop + 1;
+            face[j].pnt[2] = pointCenterBottom + 1 + n;
         }else{
             face[j].numofVertices = 4;
             // inisialisasi titik pada face
             face[j].pnt[0] = pointTop4;
             face[j].pnt[1] = pointBottom4;
-            face[j].pnt[2] = pointTop4 + 1;
-            face[j].pnt[3] = pointBottom4 + 1;
+            face[j].pnt[3] = pointTop4 + 1;
+            face[j].pnt[2] = pointBottom4 + 1;
             pointBottom4++;
             pointTop4++;           
         }
@@ -258,9 +263,6 @@ void Draw(){
     printf("\n\n");
     glFlush();
 }
-
-
-
 
 int main(int Argc, char* argv[]){
     glutInit(&Argc, argv);
