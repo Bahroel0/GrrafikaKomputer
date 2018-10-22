@@ -37,7 +37,7 @@ typedef struct {
 void Polygon(point2D_t pnt[],int n, RGB color){
     glColor3f(color.r, color.g, color.b);
     int i;
-    glBegin(GL_LINE_LOOP);
+    glBegin(GL_LINE);
         for (i=0;i<n;i++) {
             glVertex2f(pnt[i].x, pnt[i].y);
         }
