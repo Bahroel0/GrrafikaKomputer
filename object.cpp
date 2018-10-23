@@ -23,27 +23,47 @@ typedef struct {
     int numofVertices;
     point3D_t pnt[255];
     int numofFaces;
-    face_t face[255];
+    face_t fc[255];
 }object3D_t;
 
 typedef struct {
     int numofVertices;
     point3D_color pnt[100];
     int numofFaces;
-    face_t face[32];
+    face_t fc[32];
 }object3D_color;
 
 
-void Polygon(point2D_t pnt[],int n, RGB color){
-    glColor3f(color.r, color.g, color.b);
+void create3DObject(object3D_t object){
+    printf("Banyaknya Titik : %d \n", object.numofVertices);
+    printf("Banyaknya Face  : %d \n", object.numofFaces);
+    printf("\n");
 
-    // glDrawArrays(GL_LINE_STRIP, 0, sizeof(pnt)/sizeof(float));
-    int i;
-    glBegin(GL_LINES);
-        for (i=0;i<n;i++) {
-            glVertex2f(pnt[i].x, pnt[i].y);
+    // print out value of object
+    for(int i=0; i<object.numofFaces; i++){
+        printf("Face ke-%d, vertex : %d  ==>\n", i, object.fc[i].numofVertices );
+        for(int j = 0; j< object.fc[i].numofVertices; j++){
+            int point = object.fc[i].pnt[j];
+            float x = object.pnt[point].x;
+            float y = object.pnt[point].y;
+            float z = object.pnt[point].z;
+            printf("   %d : %.0f, %.0f, %.0f", point, x, y, z);
+            printf("\n");
         }
-    glEnd();
+    }
+
+
+    for(int i = 0; i < object.numofFaces; i++){
+        glColor3f(1, 0, 0);
+        glBegin(GL_LINES);
+            for(int j = 0; j < object.fc[i].numofVertices; j++){
+                int point = object.fc[i].pnt[j];
+                float x = object.pnt[point].x;
+                float y = object.pnt[point].y;
+                glVertex3f(x,y,0.0);
+            }
+        glEnd();
+    }
 }
 
 void init(){
@@ -103,7 +123,7 @@ void FromFileOFF(){
     exit(EXIT_SUCCESS);
 }
 
-void ObjectKubus(){
+void kubus(){
     object3D_t kubus = {
         8,
         {
@@ -122,10 +142,10 @@ void ObjectKubus(){
     point2D_t object[36];
     int index = 0;
     for(int i=0; i<kubus.numofFaces; i++){
-        printf("Face ke-%d, vertex : %d  ==>\n", i, kubus.face[i].numofVertices );
-        for(int j=0; j<kubus.face[i].numofVertices; j++){
-            int vertek = kubus.face[i].pnt[j];
-            printf("   %d : %.0f, %.0f, %.0f", kubus.face[i].pnt[j], kubus.pnt[vertek].x, kubus.pnt[vertek].y, kubus.pnt[vertek].z);
+        printf("Face ke-%d, vertex : %d  ==>\n", i, kubus.fc[i].numofVertices );
+        for(int j=0; j<kubus.fc[i].numofVertices; j++){
+            int vertek = kubus.fc[i].pnt[j];
+            printf("   %d : %.0f, %.0f, %.0f", kubus.fc[i].pnt[j], kubus.pnt[vertek].x, kubus.pnt[vertek].y, kubus.pnt[vertek].z);
             printf("\n");
 
             // insert vertex
@@ -134,132 +154,301 @@ void ObjectKubus(){
             index++;
         }
     }
-    Polygon(object, 36, {1.0, 0.0, 0.0});
-}
-
-void GambarkanObject3D(int numofVertices, point3D_t *pnt, int numofFaces, face_t *face){
-    printf("Banyaknya Titik : %d \n", numofVertices);
-    printf("Banyaknya Face  : %d \n", numofFaces);
-
-    int t;
-    for(t=0; t<numofVertices; t++){
-        printf("Titik %d : %.0f, %.0f, %.0f \n", t, pnt[t].x, pnt[t].y, pnt[t].z);
-    }
-
-    for(int i=0; i < numofFaces; i++){
-        point2D_t points[numofVertices];
-        printf("Face ke-%d, vertex : %d  ==>\n", i, face[i].numofVertices );
-        for(int j=0; j < face[i].numofVertices; j++){
-            int vertek = face[i].pnt[j];
-            printf("   %d : %.0f, %.0f, %.0f", face[i].pnt[j], pnt[vertek].x, pnt[vertek].y, pnt[vertek].z);
-            
-            points[j].x = pnt[vertek].x;
-            points[j].y = pnt[vertek].y;
-            
-            printf("\n");
-        }
-        Polygon(points, numofVertices, {1.0, 0.0, 0.0});
-    }
     
 }
+
 
 void Tabung(){
-    
-    int n = 12;
-    int pointCount = 2*n+1;
-    int faceCount = 3*n;
+    // inisialisasi jari-jari lingkaran tabung
+    int r = 100;
+    // inisialisasi sudut jarak antar titik pada lingkaran 
+    int sudut = 20;
+
+    // inisialisasi ukuran tabung (titik pusat atas, titik pusat bawah dan jarak lingkaran )
     int pointCenterTop = 0;
     int rangeTop = 75;
     int pointCenterBottom = 0;
     int rangeBottom = -75;
-    point3D_t point[pointCount];
-    face_t face[36];
 
-    // inisialisasi titik
-    int i, r = 100, teta =0;
-    for(i=0; i<pointCount; i++){
-        if(i<n){
-            point[i].x = r * cos(teta);
-            point[i].y = rangeTop;
-            point[i].z = r * sin(teta);
-        }else{
-            point[i].x = r * cos(teta);
-            point[i].y = rangeBottom;
-            point[i].z = r * sin(teta);
+    int n = 360/sudut;
+    int numofVertices = 2*n + 1;
+    int numofFaces = 3*n;
+    
+    object3D_t tabung;
+    tabung.numofVertices    = numofVertices;
+    tabung.numofFaces       = numofFaces;
+
+    int teta = 0;
+    // inisialisasi vertex
+    for(int i=0; i<=numofVertices; i++){
+        if(i==0){
+            tabung.pnt[i].x = 0;
+            tabung.pnt[i].y = rangeTop;
+            tabung.pnt[i].z = 0;
         }
-        if(teta <330){
-            teta += 360/n;
-        }else{
-            teta = 0;
+        else if(i<=n){
+            tabung.pnt[i].x = r * cos(teta);
+            tabung.pnt[i].y = rangeTop;
+            tabung.pnt[i].z = r * sin(teta);
+        }
+        else if(i== numofVertices){
+            tabung.pnt[i].x = 0;
+            tabung.pnt[i].y = rangeBottom;
+            tabung.pnt[i].z = 0;
+        }
+        else{
+            tabung.pnt[i].x = r * cos(teta);
+            tabung.pnt[i].y = rangeBottom;
+            tabung.pnt[i].z = r * sin(teta);
+        }
+
+        if(teta < 360){
+            teta += sudut;
+        }else {
+            teta = sudut;
         }
     }
 
     // inisialisasi face
-    int j, pointTop3 = 0, pointBottom3 = n, pointBottom4 = n, pointTop4 = 0;
+    int pointTop3 = 0, pointBottom3 = n, pointBottom4 = n, pointTop4 = 0;
+
     bool first = true;
-    for(j=0; j<faceCount; j++){
-        if(j<(n-1)){
-            face[j].numofVertices = 3;
+    
+    for(int i=0; i<tabung.numofFaces; i++){
+        if(i<(n-1)){
+            tabung.fc[i].numofVertices = 3;
             // inisialisasi titik pada face
-            int k;
+            
             first = true;
-            for(k=0; k < face[j].numofVertices; k++){
+            for(int j=0; j < tabung.fc[i].numofVertices; j++){
                 if(first){
-                    face[j].pnt[k] = pointCenterTop;
+                    tabung.fc[i].pnt[j] = 0;
                     first = false; 
                 }else{
-                    face[j].pnt[k] = pointTop3; 
+                    tabung.fc[i].pnt[j] = pointTop3; 
                 }
                 pointTop3++;
             }
             pointTop3 = pointTop3-2;
-        }else if(j == (n-1)){
-            face[j].numofVertices = 3;
-            face[j].pnt[0] = pointCenterTop;
-            face[j].pnt[1] = pointCenterTop+1;
-            face[j].pnt[2] = n-1;
-        }else if(j>=n && j<(2*n-1)){
-            face[j].numofVertices = 3;
+
+        }else if(i == (n-1)){
+            tabung.fc[i].numofVertices = 3;
+            tabung.fc[i].pnt[0] = pointCenterTop;
+            tabung.fc[i].pnt[1] = pointCenterTop+1;
+            tabung.fc[i].pnt[2] = n-1;
+        }else if(i>=n && i<(2*n)){
+            tabung.fc[i].numofVertices = 3;
             // inisialisasi titik pada face
-            int l;
             first = true;
-            for(l=0; l < face[j].numofVertices; l++){
+            for(int j=0; j < tabung.fc[i].numofVertices; j++){
                 if(first){
-                    face[j].pnt[l] = pointBottom3;
+                    tabung.fc[i].pnt[j] = 2 * n + 1;
+                    first = false;
                 }else{
-                    face[j].pnt[l] = pointBottom3; 
+                    tabung.fc[i].pnt[j] = pointBottom3; 
                 }
                 pointBottom3++;
             }
             pointBottom3 = pointBottom3 - 2;
-        }else if(j == (faceCount-1)){
-            face[j].numofVertices = 4;
+        }else if(i == (numofFaces-1)){
+            tabung.fc[i].numofVertices = 4;
             // inisialisasi titik pada face
-            face[j].pnt[0] = pointTop4;
-            face[j].pnt[1] = pointBottom4;
-            face[j].pnt[3] = pointCenterTop + 1;
-            face[j].pnt[2] = pointCenterBottom + 1 + n;
+            tabung.fc[i].pnt[0] = pointTop4;
+            tabung.fc[i].pnt[1] = pointBottom4;
+            tabung.fc[i].pnt[3] = pointCenterTop + 1;
+            tabung.fc[i].pnt[2] = pointCenterBottom + 1 + n;
         }else{
-            face[j].numofVertices = 4;
+            tabung.fc[i].numofVertices = 4;
             // inisialisasi titik pada face
-            face[j].pnt[0] = pointTop4;
-            face[j].pnt[1] = pointBottom4;
-            face[j].pnt[3] = pointTop4 + 1;
-            face[j].pnt[2] = pointBottom4 + 1;
+            tabung.fc[i].pnt[0] = pointTop4;
+            tabung.fc[i].pnt[1] = pointBottom4;
+            tabung.fc[i].pnt[3] = pointTop4 + 1;
+            tabung.fc[i].pnt[2] = pointBottom4 + 1;
             pointBottom4++;
             pointTop4++;           
         }
     }
 
-    GambarkanObject3D(pointCount, point, faceCount, face);
+    create3DObject(tabung);
 }
+
+void Kerucut(){
+    // inisialisasi jari-jari lingkaran tabung
+    int r = 150;
+    // inisialisasi sudut jarak antar titik pada lingkaran 
+    int sudut = 30;
+
+    // inisialisasi nilai titik pusat object
+    int pointxCenter = 0;
+    int pointyCenter = 0;
+    int pointzCenter = 0;
+
+    int height = 150;
+
+    int n = 360/sudut;
+    int numofVertices = 2*n + 3;
+    int numofFaces = 4*n;
+
+    // inisialisasi titik tengah untuk face
+    int pointCenterTopFace = 0;
+    int pointCenterMidle   = n+1;
+    int pointCenterBottomFace = numofVertices;
+    
+    object3D_t JamPasir;
+    JamPasir.numofVertices    = numofVertices;
+    JamPasir.numofFaces       = numofFaces;
+    
+    int teta = 0;
+
+    // input value of each vertex
+    for(int i=0; i<JamPasir.numofVertices; i++){
+        if(i == 0){
+            JamPasir.pnt[i].x = pointxCenter;
+            JamPasir.pnt[i].y = height;
+            JamPasir.pnt[i].z = pointzCenter;
+        }else if(i <= n){
+            JamPasir.pnt[i].x = r * cos(teta);
+            JamPasir.pnt[i].y = height;
+            JamPasir.pnt[i].z = r * sin(teta);
+        }else if(i == (n+1)){
+            JamPasir.pnt[i].x = pointxCenter;
+            JamPasir.pnt[i].y = pointzCenter;
+            JamPasir.pnt[i].z = pointzCenter;
+        }else if(i<(numofVertices-1) ){
+            JamPasir.pnt[i].x = r * cos(teta);
+            JamPasir.pnt[i].y = height * -1;
+            JamPasir.pnt[i].z = r * sin(teta);
+        }else if(i == (numofVertices-1)){
+            JamPasir.pnt[i].x = pointxCenter;
+            JamPasir.pnt[i].y = height * -1;
+            JamPasir.pnt[i].z = pointzCenter;
+        }
+
+        if(teta < 360){
+            teta += sudut;
+        }else {
+            teta = sudut;
+        }
+
+    }
+    int index = 0;
+    // input value of face
+    for(int i=0; i<JamPasir.numofFaces; i++){
+        
+        bool first = true;
+        JamPasir.fc[i].numofVertices = 3;
+
+        if(i<(n-1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterTopFace;
+                    first = false;
+                }else{
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i==(n-1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterTopFace;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }else{
+                    JamPasir.fc[i].pnt[j] = pointCenterTopFace +1;
+                }
+            }
+            index = 0;
+        }else if(i < (2*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else{
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (2*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }else{
+                    JamPasir.fc[i].pnt[j] = pointCenterTopFace +1;
+                }
+            }
+            index = n+1;
+        }else if(i < (3*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else{
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (3*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }else{
+                    JamPasir.fc[i].pnt[j] = pointCenterBottomFace - pointCenterMidle;
+                }
+            }
+            index = pointCenterMidle;
+        }else if(i < (4*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterBottomFace -1;
+                    first = false;
+                }else{
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (4*n - 1)){
+            for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
+                if(first){
+                    JamPasir.fc[i].pnt[j] = pointCenterBottomFace;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    JamPasir.fc[i].pnt[j] = index;
+                }else{
+                    JamPasir.fc[i].pnt[j] = pointCenterBottomFace - pointCenterMidle;
+                }
+            }
+        }       
+    }
+
+    create3DObject(JamPasir);    
+}
+
+
 
 void Draw(){
     init();
 
     // FromFileOFF();
-
     Tabung();
+    // Kerucut();
+
+
     printf("\n\n");
     glFlush();
 }
