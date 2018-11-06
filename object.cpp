@@ -3,16 +3,20 @@
 #include <cmath>
 #include <string.h>
 
-typedef struct { float x; float y; }point2D_t;
-typedef struct { float r; float g; float b;}RGB;
+typedef struct { 
+    float x; float y; 
+}point2D_t;
+
+typedef struct { 
+    float r; float g; float b;
+}RGB;
 
 typedef struct {
     float x, y, z;
 }point3D_t;
 
-typedef struct {
-    float x, y, z, r, g, b;
-}point3D_color;
+typedef struct { float v[3]; } Vector3D_t;
+typedef struct { float m[3][3]; } matrix3D_t;
 
 typedef struct {
     int numofVertices;
@@ -26,13 +30,34 @@ typedef struct {
     face_t fc[255];
 }object3D_t;
 
-typedef struct {
-    int numofVertices;
-    point3D_color pnt[100];
-    int numofFaces;
-    face_t fc[32];
-}object3D_color;
+int char_int(char *d) { int sum = atoi(d); return(int) sum; }
 
+
+matrix3D_t createIdentity(){
+	matrix3D_t rotate;
+	rotate.m[0][0] = 0.0;
+	rotate.m[0][1] = 0.0;
+	rotate.m[0][2] = 0.0;
+
+	rotate.m[1][0] = 0.0;
+	rotate.m[1][1] = 0.0;
+	rotate.m[1][2] = 0.0;
+
+	rotate.m[2][0] = 0.0;
+	rotate.m[2][1] = 0.0;
+	rotate.m[2][1] = 0.0;
+	return rotate;
+}
+
+
+
+void init(){
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-200, 200, -200, 200);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
 
 void create3DObject(object3D_t object){
     printf("Banyaknya Titik : %d \n", object.numofVertices);
@@ -65,16 +90,6 @@ void create3DObject(object3D_t object){
         glEnd();
     }
 }
-
-void init(){
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(-200, 200, -200, 200);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-int char_int(char *d) { int sum = atoi(d); return(int) sum; }
 
 void FromFileOFF(){
     FILE *fp;
@@ -123,6 +138,8 @@ void FromFileOFF(){
     exit(EXIT_SUCCESS);
 }
 
+
+
 void kubus(){
     object3D_t kubus = {
         8,
@@ -156,7 +173,6 @@ void kubus(){
     }
     
 }
-
 
 void Tabung(){
     // inisialisasi jari-jari lingkaran tabung
@@ -445,9 +461,8 @@ void Draw(){
     init();
 
     // FromFileOFF();
-    Tabung();
+    // Tabung();
     // Kerucut();
-
 
     printf("\n\n");
     glFlush();
@@ -464,4 +479,3 @@ int main(int Argc, char* argv[]){
 	glutMainLoop();
     return 0;
 }
-

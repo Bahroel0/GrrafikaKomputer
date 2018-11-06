@@ -190,10 +190,13 @@ void display() {
 		sudutRotasi = 0.0;
 	glFlush();
 }
+
 void timer(int value){
 	glutPostRedisplay();
 	glutTimerFunc(10, timer, 0);
 }
+
+
 void Initialize() {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
