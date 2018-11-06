@@ -100,6 +100,28 @@ matrix3D_t rotationZ(float teta){
 	return rotate;
 }
 
+Vector3D_t operator +(Vector3D_t a, Vector3D_t b){
+	Vector3D_t c;
+	for (int i = 0; i<3; i++){
+		c.v[i] = a.v[i] + b.v[i];
+	} return c;
+}
+
+Vector3D_t operator -(Vector3D_t a, Vector3D_t b){
+	Vector3D_t c;
+	for (int i = 0; i<3; i++){
+		c.v[i] = a.v[i] - b.v[i];
+	} return c;
+}
+
+Vector3D_t operator *(matrix3D_t a, Vector3D_t b){
+	Vector3D_t c; for (int i = 0; i<3; i++){
+		c.v[i] = 0; for (int j = 0; j<3; j++){
+			c.v[i] += a.m[i][j] * b.v[j];
+		}
+	} return c;
+}
+
 
 
 void init(){
