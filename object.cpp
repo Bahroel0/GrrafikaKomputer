@@ -49,6 +49,57 @@ matrix3D_t createIdentity(){
 	return rotate;
 }
 
+matrix3D_t rotationX(float teta){
+	matrix3D_t rotate = createIdentity();
+	rotate.m[0][0] = 1.0;
+	rotate.m[0][1] = 0.0;
+	rotate.m[0][2] = 0.0;
+
+	rotate.m[1][0] = 0.0;
+	rotate.m[1][1] = cos(teta / 57.3);
+	rotate.m[1][2] = -sin(teta / 57.3);
+
+	rotate.m[2][0] = 0.0;
+	rotate.m[2][1] = sin(teta / 57.3);
+	rotate.m[2][2] = cos(teta / 57.3);
+
+	return rotate;
+}
+
+matrix3D_t rotationY(float teta){
+	matrix3D_t rotate = createIdentity();
+	rotate.m[0][0] = cos(teta / 57.3);
+	rotate.m[0][1] = 0.0;
+	rotate.m[0][2] = sin(teta / 57.3);
+
+	rotate.m[1][0] = 0.0;
+	rotate.m[1][1] = 1.0;
+	rotate.m[1][2] = 0.0;
+
+	rotate.m[2][0] = -sin(teta / 57.3);
+	rotate.m[2][1] = 0.0;
+	rotate.m[2][2] = cos(teta / 57.3);
+
+	return rotate;
+}
+
+matrix3D_t rotationZ(float teta){
+	matrix3D_t rotate = createIdentity();
+	rotate.m[0][0] = cos(teta / 57.3);
+	rotate.m[0][1] = -sin(teta / 57.3);
+	rotate.m[0][2] = 0.0;
+
+	rotate.m[1][0] = sin(teta / 57.3);
+	rotate.m[1][1] = cos(teta / 57.3);
+	rotate.m[1][2] = 0.0;
+
+	rotate.m[2][0] = 0.0;
+	rotate.m[2][1] = 0.0;
+	rotate.m[2][2] = 1.0;
+
+	return rotate;
+}
+
 
 
 void init(){
