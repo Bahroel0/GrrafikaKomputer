@@ -168,6 +168,8 @@ void display() {
 			}
 		}
 	}
+
+
 	matrix3D_t matrix_X = rotationX(sudutRotasi);
 	matrix3D_t matrix_Y = rotationY(sudutRotasi);
 	matrix3D_t matrix_Z = rotationZ(sudutRotasi);
@@ -186,8 +188,10 @@ void display() {
 	create3DObject(kerucut);
 	sudutRotasi++;
 
-	if (sudutRotasi >= 360.0)
+	if (sudutRotasi >= 360.0){
 		sudutRotasi = 0.0;
+	}
+		
 	glFlush();
 }
 

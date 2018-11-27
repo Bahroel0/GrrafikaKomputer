@@ -6,6 +6,8 @@
 #include <fstream>
 using namespace std;
 
+
+double sudutRotasi = (float)(0);
 typedef struct { 
     float x; float y; 
 }point2D_t;
@@ -164,7 +166,7 @@ void create3DObject(object3D_t object){
 
     for(int i = 0; i < object.numofFaces; i++){
         glColor3f(1, 0, 0);
-        glBegin(GL_LINES);
+        glBegin(GL_LINE_STRIP);
             for(int j = 0; j < object.fc[i].numofVertices; j++){
                 int point = object.fc[i].pnt[j];
                 float x = object.pnt[point].x;
@@ -204,7 +206,8 @@ void FromFileOFF(){
     ssize_t read;
 
     // fp = fopen("limas.off", "r");
-    fp = fopen("A005_01_3622.off", "r");    
+    fp = fopen("OFF/jampasir.off", "r");
+    // fp = fopen("A005_01_3622.off", "r");    
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
@@ -413,7 +416,7 @@ void JamPasir(){
     // inisialisasi jari-jari lingkaran tabung
     int r = 150;
     // inisialisasi sudut jarak antar titik pada lingkaran 
-    int sudut = 30;
+    int sudut = 20;
 
     // inisialisasi nilai titik pusat object
     int pointxCenter = 0;
@@ -437,31 +440,34 @@ void JamPasir(){
     
     int teta = 0;
 
+
     // input value of each vertex
     for(int i=0; i<JamPasir.numofVertices; i++){
+        float tetas = (double)(teta/ 57.3);
         if(i == 0){
             JamPasir.pnt[i].x = pointxCenter;
             JamPasir.pnt[i].y = height;
             JamPasir.pnt[i].z = pointzCenter;
-        }else if(i <= n){
-            JamPasir.pnt[i].x = r * cos(teta);
+        }else if(i <= n && i > 0){
+            JamPasir.pnt[i].x = r * cos(tetas);
             JamPasir.pnt[i].y = height;
-            JamPasir.pnt[i].z = r * sin(teta);
+            JamPasir.pnt[i].z = r * sin(tetas);
         }else if(i == (n+1)){
             JamPasir.pnt[i].x = pointxCenter;
             JamPasir.pnt[i].y = pointzCenter;
             JamPasir.pnt[i].z = pointzCenter;
-        }else if(i<(numofVertices-1) ){
-            JamPasir.pnt[i].x = r * cos(teta);
+        }else if(i<(numofVertices-1) && i > (n+1) ){
+            JamPasir.pnt[i].x = r * cos(tetas);
             JamPasir.pnt[i].y = height * -1;
-            JamPasir.pnt[i].z = r * sin(teta);
+            JamPasir.pnt[i].z = r * sin(tetas);
         }else if(i == (numofVertices-1)){
             JamPasir.pnt[i].x = pointxCenter;
             JamPasir.pnt[i].y = height * -1;
             JamPasir.pnt[i].z = pointzCenter;
         }
 
-        if(teta < 360){
+        // teta = teta + sudut;
+        if(teta <= 360){
             teta += sudut;
         }else {
             teta = sudut;
@@ -499,7 +505,7 @@ void JamPasir(){
                 }
             }
             index = 0;
-        }else if(i < (2*n - 1)){
+        }else if(i < (2*n - 1) && i > (n-1)){
             for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
                 if(first){
                     JamPasir.fc[i].pnt[j] = pointCenterMidle;
@@ -523,7 +529,7 @@ void JamPasir(){
                 }
             }
             index = n+1;
-        }else if(i < (3*n - 1)){
+        }else if(i < (3*n - 1) && i > (2*n - 1)){
             for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
                 if(first){
                     JamPasir.fc[i].pnt[j] = pointCenterMidle;
@@ -547,7 +553,7 @@ void JamPasir(){
                 }
             }
             index = pointCenterMidle;
-        }else if(i < (4*n - 1)){
+        }else if(i < (4*n - 1) && i > (3*n - 1)){
             for(int j=0; j< JamPasir.fc[i].numofVertices; j++){
                 if(first){
                     JamPasir.fc[i].pnt[j] = pointCenterBottomFace -1;
@@ -573,8 +579,37 @@ void JamPasir(){
         }       
     }
 
-    create3DObject(JamPasir);
-    saveFile(JamPasir, "jampasir");    
+    // create3DObject(JamPasir);
+
+    matrix3D_t matrix_X = rotationX(sudutRotasi);
+	matrix3D_t matrix_Y = rotationY(sudutRotasi);
+	matrix3D_t matrix_Z = rotationZ(sudutRotasi);
+	for (int i = 0; i<JamPasir.numofVertices; i++){
+		Vector3D_t p;
+		p.v[0] = JamPasir.pnt[i].x;
+		p.v[1] = JamPasir.pnt[i].y;
+		p.v[2] = JamPasir.pnt[i].z;
+		p = (matrix_Y)*(p);
+		p = (matrix_X)*(p);
+		p = (matrix_Z)*(p);
+		JamPasir.pnt[i].x = p.v[0];
+		JamPasir.pnt[i].y = p.v[1];
+		JamPasir.pnt[i].z = p.v[2];
+	}
+	create3DObject(JamPasir);
+	sudutRotasi++;
+
+	if (sudutRotasi >= 360.0){
+		sudutRotasi = 0.0;
+	}
+    glFlush();
+
+
+
+
+
+    // create3DObject(JamPasir);
+    // saveFile(JamPasir, "jampasir");    
 }
 
 void Kerucut(){
@@ -607,22 +642,23 @@ void Kerucut(){
 
     // input value of each vertex
     for(int i=0; i<Kerucut.numofVertices; i++){
+        float tetas = (double)(teta/ 57.3);
         if(i == 0){
             Kerucut.pnt[i].x = pointxCenter;
             Kerucut.pnt[i].y = height;
             Kerucut.pnt[i].z = pointzCenter;
         }else if(i <= n){
-            Kerucut.pnt[i].x = r * cos(teta);
+            Kerucut.pnt[i].x = r * cos(tetas);
             Kerucut.pnt[i].y = height;
-            Kerucut.pnt[i].z = r * sin(teta);
+            Kerucut.pnt[i].z = r * sin(tetas);
         }else if(i == (n+1)){
             Kerucut.pnt[i].x = pointxCenter;
             Kerucut.pnt[i].y = pointzCenter;
             Kerucut.pnt[i].z = pointzCenter;
         }else if(i<(numofVertices-1) ){
-            Kerucut.pnt[i].x = r * cos(teta);
+            Kerucut.pnt[i].x = r * cos(tetas);
             Kerucut.pnt[i].y = height * -1;
-            Kerucut.pnt[i].z = r * sin(teta);
+            Kerucut.pnt[i].z = r * sin(tetas);
         }else if(i == (numofVertices-1)){
             Kerucut.pnt[i].x = pointxCenter;
             Kerucut.pnt[i].y = height * -1;
@@ -741,18 +777,40 @@ void Kerucut(){
         }       
     }
 
-    create3DObject(Kerucut);
-    saveFile(Kerucut, "kerucut");    
+    // create3DObject(Kerucut);
+    // saveFile(Kerucut, "kerucut"); 
+    matrix3D_t matrix_X = rotationX(sudutRotasi);
+	matrix3D_t matrix_Y = rotationY(sudutRotasi);
+	matrix3D_t matrix_Z = rotationZ(sudutRotasi);
+	for (int i = 0; i<Kerucut.numofVertices; i++){
+		Vector3D_t p;
+		p.v[0] = Kerucut.pnt[i].x;
+		p.v[1] = Kerucut.pnt[i].y;
+		p.v[2] = Kerucut.pnt[i].z;
+		p = (matrix_Y)*(p);
+		p = (matrix_X)*(p);
+		p = (matrix_Z)*(p);
+		Kerucut.pnt[i].x = p.v[0];
+		Kerucut.pnt[i].y = p.v[1];
+		Kerucut.pnt[i].z = p.v[2];
+	}
+	create3DObject(Kerucut);
+	sudutRotasi++;
+
+	if (sudutRotasi >= 360.0){
+		sudutRotasi = 0.0;
+	}
+    glFlush();   
 }
 
 
 void Draw(){
     init();
 
-    FromFileOFF();
+    // FromFileOFF();
     // Tabung();
     // JamPasir();
-    // Kerucut();
+    Kerucut();
 
     printf("\n\n");
     glFlush();
