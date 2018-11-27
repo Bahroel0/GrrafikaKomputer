@@ -2,6 +2,9 @@
 #include <GL/glut.h>
 #include <cmath>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 typedef struct { 
     float x; float y; 
@@ -122,7 +125,13 @@ Vector3D_t operator *(matrix3D_t a, Vector3D_t b){
 	} return c;
 }
 
-
+Vector3D_t operator ^(Vector3D_t a,Vector3D_t b){
+    Vector3D_t c;
+    c.v[0]=a.v[1]*b.v[2]-a.v[2]*b.v[1];
+    c.v[1]=a.v[2]*b.v[0]-a.v[0]*b.v[2];
+    c.v[2]=a.v[0]*b.v[1]-a.v[1]*b.v[0];
+    return c;
+}
 
 void init(){
     glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -133,6 +142,8 @@ void init(){
 }
 
 void create3DObject(object3D_t object){
+
+    printf("\nObject yang dikirim\n");
     printf("Banyaknya Titik : %d \n", object.numofVertices);
     printf("Banyaknya Face  : %d \n", object.numofFaces);
     printf("\n");
@@ -164,18 +175,41 @@ void create3DObject(object3D_t object){
     }
 }
 
+void saveFile(object3D_t object, string name){
+    ofstream myfile;
+    myfile.open ("/home/bahroel/Kuliah/Semester 5/Grafika Komputer/Project/OpenGL/OFF/"+name+".off");
+    myfile << "COFF\n";
+    myfile << std::to_string(object.numofVertices)+" "+std::to_string(object.numofFaces)+" 0\n";
+    for(int i=0; i<object.numofVertices;i++){
+        myfile << std::to_string(object.pnt[i].x)+" "+std::to_string(object.pnt[i].y)+" "+std::to_string(object.pnt[i].z)+" "+" 255 0 0 255\n";
+    }
+    for (int i=0; i<object.numofFaces; i++) {
+        myfile << std::to_string(object.fc[i].numofVertices);
+        for (int j = 0; j<object.fc[i].numofVertices; j++) {
+            myfile << " "+std::to_string(object.fc[i].pnt[j]);
+        }
+        myfile << "\n";
+    }
+    
+    myfile.close();
+}
+
+
 void FromFileOFF(){
+    object3D_t object;
+
     FILE *fp;
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
 
-   fp = fopen("limas2.off", "r");
+    // fp = fopen("limas.off", "r");
+    fp = fopen("A005_01_3622.off", "r");    
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
     // inisialisasi array untuk menerima nilai titik dan face
-    int row[255][255];
+    int row[5440][7];
     int index = 0;
    while ((read = getline(&line, &len, fp)) != -1) {
         char *p = strtok (line, " ");
@@ -189,26 +223,39 @@ void FromFileOFF(){
         index++; // mengatur pembacaan setiap baris 
     }
     printf("Jumlah titik : %d\n", row[1][0]);
-    printf("Jumlah face : %d\n\n", row[1][1]);
+    object.numofVertices = row[1][0];
 
-    for(int l=0; l<row[1][0]; l++){
-        printf("Titik %d: %d %d %d, RGB: %d, %d, %d\n", l, row[l+2][0], row[l+2][1], row[l+2][2], row[l+2][3], row[l+2][4], row[l+2][5]);
+    printf("Jumlah face : %d\n\n", row[1][1]);
+    object.numofFaces = row[1][1];
+
+    for(int l=0; l<object.numofVertices; l++){
+        // printf("Titik %d: %d %d %d, RGB: %d, %d, %d\n", l, row[l+2][0], row[l+2][1], row[l+2][2], row[l+2][3], row[l+2][4], row[l+2][5]);
+        object.pnt[l].x = row[l+2][0];
+        object.pnt[l].y = row[l+2][1];
+        object.pnt[l].z = row[l+2][2];
+        printf("Titik %d: %.3f %.3f %.3f, RGB: %d, %d, %d\n", l, object.pnt[l].x, object.pnt[l].y, object.pnt[l].z, row[l+2][3], row[l+2][4], row[l+2][5]);
     }
     
     printf("\n");
-    for(int m=0; m<row[1][1]; m++){
+    for(int m=0; m<object.numofFaces; m++){
         int kolomFace = row[m+2+row[1][0]][0];
         int h=1;
+        int index = 0;
+        object.fc[m].numofVertices = kolomFace;
         printf("Face %d:", m);
         for(h=1; h<=kolomFace; h++){
+            object.fc[m].pnt[index] = row[m+2+row[1][0]][h];
             printf(" %d ", row[m+2+row[1][0]][h]);
+            index++;
         }
         printf("\n");
     }
 
+    create3DObject(object);
 
-    free(line);
-    exit(EXIT_SUCCESS);
+
+    // free(line);
+    // exit(EXIT_SUCCESS);
 }
 
 
@@ -359,9 +406,10 @@ void Tabung(){
     }
 
     create3DObject(tabung);
+    saveFile(tabung, "tabung");
 }
 
-void Kerucut(){
+void JamPasir(){
     // inisialisasi jari-jari lingkaran tabung
     int r = 150;
     // inisialisasi sudut jarak antar titik pada lingkaran 
@@ -525,16 +573,185 @@ void Kerucut(){
         }       
     }
 
-    create3DObject(JamPasir);    
+    create3DObject(JamPasir);
+    saveFile(JamPasir, "jampasir");    
 }
 
+void Kerucut(){
+    // inisialisasi jari-jari lingkaran tabung
+    int r = 150;
+    // inisialisasi sudut jarak antar titik pada lingkaran 
+    int sudut = 30;
+
+    // inisialisasi nilai titik pusat object
+    int pointxCenter = 0;
+    int pointyCenter = 0;
+    int pointzCenter = 0;
+
+    int height = -150;
+
+    int n = 360/sudut;
+    int numofVertices = n + 2;
+    int numofFaces = 2*n;
+
+    // inisialisasi titik tengah untuk face
+    int pointCenterTopFace = 0;
+    int pointCenterMidle   = n+1;
+    int pointCenterBottomFace = numofVertices;
+    
+    object3D_t Kerucut;
+    Kerucut.numofVertices    = numofVertices;
+    Kerucut.numofFaces       = numofFaces;
+    
+    int teta = 0;
+
+    // input value of each vertex
+    for(int i=0; i<Kerucut.numofVertices; i++){
+        if(i == 0){
+            Kerucut.pnt[i].x = pointxCenter;
+            Kerucut.pnt[i].y = height;
+            Kerucut.pnt[i].z = pointzCenter;
+        }else if(i <= n){
+            Kerucut.pnt[i].x = r * cos(teta);
+            Kerucut.pnt[i].y = height;
+            Kerucut.pnt[i].z = r * sin(teta);
+        }else if(i == (n+1)){
+            Kerucut.pnt[i].x = pointxCenter;
+            Kerucut.pnt[i].y = pointzCenter;
+            Kerucut.pnt[i].z = pointzCenter;
+        }else if(i<(numofVertices-1) ){
+            Kerucut.pnt[i].x = r * cos(teta);
+            Kerucut.pnt[i].y = height * -1;
+            Kerucut.pnt[i].z = r * sin(teta);
+        }else if(i == (numofVertices-1)){
+            Kerucut.pnt[i].x = pointxCenter;
+            Kerucut.pnt[i].y = height * -1;
+            Kerucut.pnt[i].z = pointzCenter;
+        }
+
+        if(teta < 360){
+            teta += sudut;
+        }else {
+            teta = sudut;
+        }
+
+    }
+    int index = 0;
+    // input value of face
+    for(int i=0; i<Kerucut.numofFaces; i++){
+        
+        bool first = true;
+        Kerucut.fc[i].numofVertices = 3;
+
+        if(i<(n-1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterTopFace;
+                    first = false;
+                }else{
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i==(n-1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterTopFace;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }else{
+                    Kerucut.fc[i].pnt[j] = pointCenterTopFace +1;
+                }
+            }
+            index = 0;
+        }else if(i < (2*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else{
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (2*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }else{
+                    Kerucut.fc[i].pnt[j] = pointCenterTopFace +1;
+                }
+            }
+            index = n+1;
+        }else if(i < (3*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else{
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (3*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterMidle;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }else{
+                    Kerucut.fc[i].pnt[j] = pointCenterBottomFace - pointCenterMidle;
+                }
+            }
+            index = pointCenterMidle;
+        }else if(i < (4*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterBottomFace -1;
+                    first = false;
+                }else{
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }
+            }
+            index--;
+        }else if(i == (4*n - 1)){
+            for(int j=0; j< Kerucut.fc[i].numofVertices; j++){
+                if(first){
+                    Kerucut.fc[i].pnt[j] = pointCenterBottomFace;
+                    first = false;
+                }else if(j==1){
+                    index++;
+                    Kerucut.fc[i].pnt[j] = index;
+                }else{
+                    Kerucut.fc[i].pnt[j] = pointCenterBottomFace - pointCenterMidle;
+                }
+            }
+        }       
+    }
+
+    create3DObject(Kerucut);
+    saveFile(Kerucut, "kerucut");    
+}
 
 
 void Draw(){
     init();
 
-    // FromFileOFF();
+    FromFileOFF();
     // Tabung();
+    // JamPasir();
     // Kerucut();
 
     printf("\n\n");
