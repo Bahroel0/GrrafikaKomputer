@@ -30,10 +30,18 @@ typedef struct {
 
 typedef struct {
     int numofVertices;
-    point3D_t pnt[255];
+    point3D_t pnt[5440];
     int numofFaces;
-    face_t fc[255];
+    face_t fc[5440];
 }object3D_t;
+
+typedef struct {
+    point3D_t centerofCirle;
+    point3D_t centerofSummit;
+    int radius;
+    int sudut;
+    int height;
+}objectKerucut;
 
 int char_int(char *d) { int sum = atoi(d); return(int) sum; }
 
@@ -145,27 +153,28 @@ void init(){
 
 void create3DObject(object3D_t object){
 
-    printf("\nObject yang dikirim\n");
-    printf("Banyaknya Titik : %d \n", object.numofVertices);
-    printf("Banyaknya Face  : %d \n", object.numofFaces);
-    printf("\n");
+    // printf("\nObject yang dikirim\n");
+    // printf("Banyaknya Titik : %d \n", object.numofVertices);
+    // printf("Banyaknya Face  : %d \n", object.numofFaces);
+    // printf("\n");
 
     // print out value of object
     for(int i=0; i<object.numofFaces; i++){
-        printf("Face ke-%d, vertex : %d  ==>\n", i, object.fc[i].numofVertices );
+        // printf("Face ke-%d, vertex : %d  ==>\n", i, object.fc[i].numofVertices );
         for(int j = 0; j< object.fc[i].numofVertices; j++){
             int point = object.fc[i].pnt[j];
             float x = object.pnt[point].x;
             float y = object.pnt[point].y;
             float z = object.pnt[point].z;
-            printf("   %d : %.0f, %.0f, %.0f", point, x, y, z);
-            printf("\n");
+            // printf("   %d : %.0f, %.0f, %.0f", point, x, y, z);
+            // printf("\n");
         }
     }
 
 
     for(int i = 0; i < object.numofFaces; i++){
         glColor3f(1, 0, 0);
+        // glBegin(GL_LINE_STRIP);
         glBegin(GL_LINE_STRIP);
             for(int j = 0; j < object.fc[i].numofVertices; j++){
                 int point = object.fc[i].pnt[j];
@@ -206,8 +215,8 @@ void FromFileOFF(){
     ssize_t read;
 
     // fp = fopen("limas.off", "r");
-    fp = fopen("OFF/jampasir.off", "r");
-    // fp = fopen("A005_01_3622.off", "r");    
+    // fp = fopen("OFF/tabung.off", "r");
+    fp = fopen("A005_01_3622.off", "r");    
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
@@ -256,8 +265,9 @@ void FromFileOFF(){
 
     create3DObject(object);
 
-
-    // free(line);
+    
+    free(line);
+    glFlush(); 
     // exit(EXIT_SUCCESS);
 }
 
@@ -320,15 +330,16 @@ void Tabung(){
     int teta = 0;
     // inisialisasi vertex
     for(int i=0; i<=numofVertices; i++){
+        float tetas = (double)(teta/ 57.3);
         if(i==0){
             tabung.pnt[i].x = 0;
             tabung.pnt[i].y = rangeTop;
             tabung.pnt[i].z = 0;
         }
         else if(i<=n){
-            tabung.pnt[i].x = r * cos(teta);
+            tabung.pnt[i].x = r * cos(tetas);
             tabung.pnt[i].y = rangeTop;
-            tabung.pnt[i].z = r * sin(teta);
+            tabung.pnt[i].z = r * sin(tetas);
         }
         else if(i== numofVertices){
             tabung.pnt[i].x = 0;
@@ -336,9 +347,9 @@ void Tabung(){
             tabung.pnt[i].z = 0;
         }
         else{
-            tabung.pnt[i].x = r * cos(teta);
+            tabung.pnt[i].x = r * cos(tetas);
             tabung.pnt[i].y = rangeBottom;
-            tabung.pnt[i].z = r * sin(teta);
+            tabung.pnt[i].z = r * sin(tetas);
         }
 
         if(teta < 360){
@@ -408,8 +419,30 @@ void Tabung(){
         }
     }
 
-    create3DObject(tabung);
-    saveFile(tabung, "tabung");
+    // create3DObject(tabung);
+    // saveFile(tabung, "tabung");
+
+    matrix3D_t matrix_X = rotationX(sudutRotasi);
+	matrix3D_t matrix_Y = rotationY(sudutRotasi);
+	matrix3D_t matrix_Z = rotationZ(sudutRotasi);
+	for (int i = 0; i<tabung.numofVertices; i++){
+		Vector3D_t p;
+		p.v[0] = tabung.pnt[i].x;
+		p.v[1] = tabung.pnt[i].y;
+		p.v[2] = tabung.pnt[i].z;
+		p = (matrix_Y)*(p);
+		p = (matrix_X)*(p);
+		p = (matrix_Z)*(p);
+		tabung.pnt[i].x = p.v[0];
+		tabung.pnt[i].y = p.v[1];
+		tabung.pnt[i].z = p.v[2];
+	}
+	create3DObject(tabung);
+	sudutRotasi++;
+
+	if (sudutRotasi >= 360.0){
+		sudutRotasi = 0.0;
+	}
 }
 
 void JamPasir(){
@@ -803,6 +836,268 @@ void Kerucut(){
     glFlush();   
 }
 
+void KerucutEnamSisi(){
+    int xcenter = 0;
+    int ycenter = 0;
+    int zcenter = 0;
+
+    int radius  = 100;
+    int sudut   = 60;
+    int height  = 120;
+
+    int n = 360/sudut;
+
+    int numofVertices = 6*n + (6 * 2 );
+    int numofFaces       = 6 * 2 * n;
+
+    // inisialisasi kerucut
+    objectKerucut Kerucut1, Kerucut2, Kerucut3, Kerucut4, Kerucut5, Kerucut6;
+    
+    Kerucut1.centerofCirle.x = xcenter;
+    Kerucut1.centerofCirle.y = ycenter + radius;
+    Kerucut1.centerofCirle.z = zcenter;
+    Kerucut1.centerofSummit.x = xcenter;
+    Kerucut1.centerofSummit.y = Kerucut1.centerofCirle.y + height;
+    Kerucut1.centerofSummit.z = zcenter;
+    Kerucut1.sudut = sudut;
+    Kerucut1.height= height;
+    Kerucut1.radius = radius;
+
+    Kerucut2.centerofCirle.x = xcenter;
+    Kerucut2.centerofCirle.y = ycenter + (radius * -1);
+    Kerucut2.centerofCirle.z = zcenter; 
+    Kerucut2.centerofSummit.x = xcenter;
+    Kerucut2.centerofSummit.y = Kerucut1.centerofCirle.y + (height * -1);
+    Kerucut2.centerofSummit.z = zcenter;  
+    Kerucut2.sudut = sudut;
+    Kerucut2.height= height;
+    Kerucut2.radius = radius;
+
+    Kerucut3.centerofCirle.x = xcenter + radius;
+    Kerucut3.centerofCirle.y = ycenter;
+    Kerucut3.centerofCirle.z = zcenter;
+    Kerucut3.centerofSummit.x = Kerucut1.centerofCirle.x + height;
+    Kerucut3.centerofSummit.y = ycenter;
+    Kerucut3.centerofSummit.z = zcenter; 
+    Kerucut3.sudut = sudut;
+    Kerucut3.height= height;
+    Kerucut3.radius = radius;
+
+    Kerucut4.centerofCirle.x = xcenter + (radius * -1);
+    Kerucut4.centerofCirle.y = ycenter;
+    Kerucut4.centerofCirle.z = zcenter;
+    Kerucut4.centerofSummit.x = Kerucut1.centerofCirle.x + (height * -1);
+    Kerucut4.centerofSummit.y = ycenter;
+    Kerucut4.centerofSummit.z = zcenter; 
+    Kerucut4.sudut = sudut;
+    Kerucut4.height= height;
+    Kerucut4.radius = radius;
+
+    Kerucut5.centerofCirle.x = xcenter;
+    Kerucut5.centerofCirle.y = ycenter;
+    Kerucut5.centerofCirle.z = zcenter + radius;
+    Kerucut5.centerofSummit.x = xcenter;
+    Kerucut5.centerofSummit.y = ycenter;
+    Kerucut5.centerofSummit.z = Kerucut1.centerofCirle.z + height;
+    Kerucut5.sudut = sudut;
+    Kerucut5.height= height;
+    Kerucut5.radius = radius;
+
+    Kerucut6.centerofCirle.x = xcenter;
+    Kerucut6.centerofCirle.y = ycenter;
+    Kerucut6.centerofCirle.z = zcenter + (radius * -1);
+    Kerucut6.centerofSummit.x = xcenter;
+    Kerucut6.centerofSummit.y = ycenter;
+    Kerucut6.centerofSummit.z = Kerucut1.centerofCirle.z + (height *  -1);
+    Kerucut6.sudut = sudut;
+    Kerucut6.height= height;
+    Kerucut6.radius = radius;
+
+
+
+    object3D_t EnamKerucut;
+
+    EnamKerucut.numofVertices   = numofVertices;
+    EnamKerucut.numofFaces      = numofFaces;
+    
+    // limit of vertex
+    int limitvertex1, limitvertex2, limitvertex3, limitvertex4, limitvertex5, limitvertex6;
+    limitvertex1 = n+1;
+    limitvertex2 = 2*n+3;
+    limitvertex3 = 3*n+5;
+    limitvertex4 = 4*n+7;
+    limitvertex5 = 5*n+9;
+    limitvertex6 = 6*n+11;
+
+    // inisialisasi vertex in object EnamKerucut
+    int teta = 0;
+    for(int i=0; i<EnamKerucut.numofVertices; i++){
+        float tetas = (double)(teta/ 57.3);
+        if ( i<=limitvertex1 ) {
+            // Kerucut1
+            if ( i==0 ) {
+                EnamKerucut.pnt[i].x = Kerucut1.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut1.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut1.centerofCirle.z;
+            }else if ( i<limitvertex1 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut1.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut1.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut1.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut1.centerofSummit.z;
+            }
+        }else if ( i<=limitvertex2 ) {
+            // Kerucut2
+            if ( i==(limitvertex2-limitvertex1) ) {
+                EnamKerucut.pnt[i].x = Kerucut2.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut2.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut2.centerofCirle.z;
+            }else if ( i< limitvertex2 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut2.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut2.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut2.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut2.centerofSummit.z;
+            }
+        }else if(i<=limitvertex3){
+            // Kerucut3
+            if ( i==(limitvertex3-limitvertex2) ) {
+                EnamKerucut.pnt[i].x = Kerucut3.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut3.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut3.centerofCirle.z;
+            }else if ( i< limitvertex3 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut3.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut3.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut3.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut3.centerofSummit.z;
+            }
+        }else if(i<=limitvertex4){
+            // Kerucut4
+            if ( i==(limitvertex4-limitvertex3) ) {
+                EnamKerucut.pnt[i].x = Kerucut4.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut4.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut4.centerofCirle.z;
+            }else if ( i< limitvertex4 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut4.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut4.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut4.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut4.centerofSummit.z;
+            }
+        }else if(i<=limitvertex5){
+            // Kerucut5
+            if ( i==(limitvertex5-limitvertex4) ) {
+                EnamKerucut.pnt[i].x = Kerucut5.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut5.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut5.centerofCirle.z;
+            }else if ( i< limitvertex5 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut5.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut5.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut5.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut5.centerofSummit.z;
+            }
+        }else if(i<=limitvertex6){
+            // Kerucut6
+            if ( i==(limitvertex6-limitvertex5) ) {
+                EnamKerucut.pnt[i].x = Kerucut6.centerofCirle.x;
+                EnamKerucut.pnt[i].y = Kerucut6.centerofCirle.y;
+                EnamKerucut.pnt[i].z = Kerucut6.centerofCirle.z;
+            }else if ( i< limitvertex6 ){
+                EnamKerucut.pnt[i].x = radius * cos(tetas);
+                EnamKerucut.pnt[i].y = Kerucut6.centerofCirle.y;
+                EnamKerucut.pnt[i].z = radius * sin(tetas);
+            }else{
+                EnamKerucut.pnt[i].x = Kerucut6.centerofSummit.x;
+                EnamKerucut.pnt[i].y = Kerucut6.centerofSummit.y;
+                EnamKerucut.pnt[i].z = Kerucut6.centerofSummit.z;
+            }
+        }
+    }
+
+    int limitFace1, limitFace2, limitFace3, limitFace4, limitFace5, limitFace6;
+    limitFace1 = 2*n-1;
+    limitFace2 = 4*n-1;
+    limitFace3 = 6*n-1;
+    limitFace4 = 8*n-1;
+    limitFace5 = 10*n-1;
+    limitFace6 = 12*n-1;
+
+    int index = 0;
+    // inisialisasi face in object EnamKerucut
+    for(int i=0; i<EnamKerucut.numofFaces; i++){
+        bool first  = true;
+        EnamKerucut.fc[i].numofVertices = 3;
+
+        if( i<=limitFace1 ) {
+            // Kerucut1
+            
+            for(int j=0; j< EnamKerucut.fc[i].numofVertices; j++){
+                if(i<=limitFace1-n){
+                    // face lingkaran ada 4
+                    // titik 0,1,2,3,4
+                    // {0,1,2}{0,2,3}{0,3,4}{0,4,1}
+                    
+
+                }else{
+                    // face selimut
+                    // titik 1,2,3,4,5
+                }
+            }
+            
+        }else if( i<=limitFace2 ) {
+            // Kerucut2
+            if(i<=limitFace2-n){
+
+            }else{
+                
+            }
+        }else if( i<=limitFace3 ) {
+            // Kerucut3
+            if(i<=limitFace3-n){
+
+            }else{
+                
+            }
+        }else if( i<=limitFace4 ) {
+            // Kerucut4
+            if(i<=limitFace4-n){
+
+            }else{
+                
+            }
+        }else if( i<=limitFace5 ) {
+            // Kerucut5
+            if(i<=limitFace5-n){
+
+            }else{
+                
+            }
+        }else if( i<=limitFace6 ) {
+            // Kerucut6
+            if(i<=limitFace6-n){
+
+            }else{
+                
+            }
+        }
+    }
+
+    create3DObject(EnamKerucut);
+
+}
+
 
 void Draw(){
     init();
@@ -812,6 +1107,8 @@ void Draw(){
     // JamPasir();
     Kerucut();
 
+    // KerucutEnamSisi();
+
     printf("\n\n");
     glFlush();
 }
@@ -819,8 +1116,8 @@ void Draw(){
 int main(int Argc, char* argv[]){
     glutInit(&Argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(500, 500);
-	glutInitWindowPosition(400, 400);
+	glutInitWindowSize(1000, 1000);
+	glutInitWindowPosition(800, 800);
 	glutCreateWindow("Grafika Komputer | 2103161005 | Bahrul Amaruddin");
 	glutIdleFunc(Draw);
 	glutDisplayFunc(Draw);

@@ -1,9 +1,28 @@
+Yang belum :
+Render Wajah
+Visible Invisible
+
+
+
+
+
+
+
+
+
+
+
+
 Go to direktory :
 /Kuliah/Semester 5/Grafika Komputer/Project/OpenGL
 
 
 g++ main.cpp -o main -lglut -lGLU -lGL
 ./main
+
+
+
+
 
 
 
