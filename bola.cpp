@@ -152,7 +152,10 @@ void cetak(object3D_t object){
     printf("Banyaknya Face  : %d \n", object.numofFaces);
     printf("\n");
 
-    // print out value of object
+    bool first = true;
+
+    if(first){
+        // print out value of object
     for(int i=0; i<object.numofFaces; i++){
         printf("Face ke-%d, vertex : %d  ==>\n", i, object.fc[i].numofVertices );
         for(int j = 0; j< object.fc[i].numofVertices; j++){
@@ -164,6 +167,9 @@ void cetak(object3D_t object){
             printf("\n");
         }
     }
+    first = false;
+    }
+    
 
     for(int i = 0; i < object.numofFaces; i++){
         
@@ -296,10 +302,122 @@ void GambarBola(){
 
 }
 
+void GambarBolaLingkaran(){
+    point3D_t center;
+    int sudut, n, radius, index, teta, radiusx;
+    object3D_t bola;
+
+    index = 0;
+    center.x = 0;
+    center.y = 0;
+    center.z = 0;
+    radius   = 100;
+
+    sudut   = 20;
+    n       = 360/sudut;
+    double suduty = (float)(sudut);
+
+    bola.numofVertices  = n*n;
+    bola.numofFaces     = n;
+
+    
+    teta = 0;
+
+    for(int i=0; i<n; i++){
+        float tetas = (double)(teta/ 57.3);
+    
+        bola.pnt[i].x = (float)radius * sin(tetas);
+        bola.pnt[i].y = (float)radius * cos(tetas);
+        bola.pnt[i].z = 0;
+
+        if(teta < 360){
+            teta += sudut;
+        }else {
+            teta = sudut;
+        }               
+    }
+
+    float y1 = radius * sin((double)(sudut/ 57.3));
+    y1 = y1-(y1/2);
+    // looping for lingkaran
+    for(int k=1; k<(n/2); k++){
+        index = 0;
+        radiusx = sudut;
+        
+        float teta = 0;
+
+        // looping for titik in lingkaran
+        for(int i=n*k; i< (n*k)+n; i++){
+            
+            float tetas = (double)(teta/ 57.3);
+    
+            if(k%2 == 0){
+                bola.pnt[i].x = (float)radius * sin(tetas);
+                bola.pnt[i].y = y1;
+                bola.pnt[i].z = (float)radius * cos(tetas);
+            }else{
+                bola.pnt[i].x = (float)radius * sin(tetas);
+                bola.pnt[i].y = y1 * -1;
+                bola.pnt[i].z = (float)radius * cos(tetas);
+            }
+
+            if(teta < 360){
+                teta += sudut;
+            }else {
+                teta = sudut;
+            }             
+        }
+
+        if(k%2==0){
+            radius = radius*cos(sudut);
+            y1 += radius * sin((double)(sudut/ 57.3));
+            suduty += (float)sudut;
+            if (suduty >= 360.0){
+                suduty = 0.0;
+            }
+        }
+    }
+
+
+    index = 0;
+    for(int i=0; i< bola.numofFaces; i++){
+        bola.fc[i].numofVertices = n;
+        for(int j=0; j< bola.fc[i].numofVertices; j++){
+            bola.fc[i].pnt[j] = index;
+            index++;
+        }
+    }
+
+    matrix3D_t matrix_Z = rotationZ(sudutRotasi);
+    matrix3D_t matrix_X = rotationX(sudutRotasi);
+	for (int i = 0; i<bola.numofVertices; i++){
+		Vector3D_t p;
+		p.v[0] = bola.pnt[i].x;
+		p.v[1] = bola.pnt[i].y;
+		p.v[2] = bola.pnt[i].z;
+
+		// p = (matrix_Z)*(p);
+        // p = (matrix_X)*(p);
+
+		bola.pnt[i].x = p.v[0];
+		bola.pnt[i].y = p.v[1];
+		bola.pnt[i].z = p.v[2];
+	}
+	cetak(bola);
+	sudutRotasi += 0.05;
+
+	if (sudutRotasi >= 360.0){
+		sudutRotasi = 0.0;
+	}
+
+
+}
+
 void Draw(){
     init();
 
-    GambarBola();
+    // GambarBola();
+    GambarBolaLingkaran();
     // Kerucut();
 
     printf("\n\n");
@@ -309,8 +427,8 @@ void Draw(){
 int main(int Argc, char* argv[]){
     glutInit(&Argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(1000, 1000);
-	glutInitWindowPosition(800, 800);
+	glutInitWindowSize(400, 400);
+	glutInitWindowPosition(500, 500);
 	glutCreateWindow("Grafika Komputer | 2103161005 | Bahrul Amaruddin");
 	glutIdleFunc(Draw);
 	glutDisplayFunc(Draw);
